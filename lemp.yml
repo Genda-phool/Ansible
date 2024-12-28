@@ -29,8 +29,8 @@
       shell: |
         mysql_secure_installation <<EOF
         y
-        my_pass
-        my_pass
+        my_pass@123
+        my_pass@123
         y
         y
         y
