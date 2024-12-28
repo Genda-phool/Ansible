@@ -1,0 +1,75 @@
+---
+- name: Set up LEMP stack
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Update and upgrade apt packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Start and enable Nginx
+      systemd:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Install MySQL
+      apt:
+        name: mysql-server
+        state: present
+
+    - name: Secure MySQL installation
+      shell: |
+        mysql_secure_installation <<EOF
+        y
+        my_pass
+        my_pass
+        y
+        y
+        y
+        y
+        EOF
+      args:
+        executable: /bin/bash
+
+    - name: Create MySQL database and user
+      mysql_db:
+        name: New
+        state: present
+
+    - name: Create MySQL user
+      mysql_user:
+        name: Zain
+        password: zainzain@3
+        priv: "New.*:ALL"
+        host: "%"
+        state: present
+
+    - name: Install PHP and required extensions
+      apt:
+        name: 
+          - php-fpm
+          - php-mysql
+        state: present
+
+    - name: Configure PHP Processor
+      lineinfile:
+        path: /etc/nginx/sites-available/default
+        regexp: '^.*# location ~ \\.php\$.*$'
+        line: |
+          location ~ \\.php\$ {
+            include snippets/fastcgi-php.conf;
+            fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+          }
+
+    - name: Restart Nginx to apply changes
+      systemd:
+        name: nginx
+        state: restarted
